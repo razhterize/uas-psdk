@@ -18,58 +18,78 @@ FirebaseConfig config;
 
 const float maxVolt = 35;
 const float maxCurrent = 6;
-int writeVal = 2500;
+int writeVal = 1600;
 float voltage, current, setVoltage=3, setCurrent=1;
 unsigned long prevMillis;
+float sets;
 
 void setup(){
   Serial.begin(115200);
+  MCP.begin();
+  if (!ads.begin()){
+    Serial.println("ADS Failed!");
+    while(1);
+  }
+  ads.setGain(GAIN_ONE);
+  lcd.init();
   WiFi.begin("12345","tahutempe");
+  while(!WiFi.isConnected()){
+    Serial.print(".");
+    delay(200);
+  }
   config.api_key = "AIzaSyAiuX8LjDc7eWa1g9MeCJDmDLJc_qKLGLw";
   config.database_url = "https://psdk-uas-87803-default-rtdb.asia-southeast1.firebasedatabase.app/";
   auth.user.email = "razhterize@gmail.com";
   auth.user.password = "visualstudio";
-  MCP.begin();
-  lcd.init();
-  lcd.backlight();
+  Firebase.begin(&config,&auth);
   printLCD();
 }
 
 void loop(){
-  current = ads.computeVolts(ads.readADC_SingleEnded(0));
-  voltage = ads.computeVolts(ads.readADC_SingleEnded(1));
+  current = (ads.computeVolts(ads.readADC_SingleEnded(0)) - 2.46) * 10;
+  voltage = ads.computeVolts(ads.readADC_SingleEnded(1))*11.43;
   if (current < setCurrent){
-    if (voltage < setVoltage){
+    if (!(setVoltage - 0.2 <= voltage)&&!(setVoltage + 0.2 >= voltage)){
+      if (voltage < setVoltage) {
       writeVal--;
-    }
-    else if (voltage > setVoltage){
+      }
+      else if (voltage > setVoltage){
       writeVal++;
+      }
     }
   }else if (current > setCurrent){
     writeVal++;
   }
-  MCP.writeDAC(writeVal, false);
+  MCP.writeDAC(writeVal);
   if (millis() - prevMillis >= 200){
     if (Firebase.ready()){
       database();
     }
+    prevMillis = millis();
     updateLCD();
     Serial.print("Set Voltage   : ");
-    Serial.println(setVoltage);
+    Serial.printf("%.2f V \n", setVoltage);
     Serial.print("Set Current   : ");
-    Serial.println(setCurrent);
+    Serial.printf("%.2f A \n", setCurrent );
     Serial.print("Voltage       : ");
-    Serial.println(voltage);
+    Serial.printf("%.2f V \n", voltage);
     Serial.print("Current       : ");
-    Serial.println(current);
+    Serial.printf("%.2f A \n", current);
+    Serial.print('\n');
+    Serial.print("wirte val");Serial.println(writeVal);
   }
 }
 
 void database(){
-  Firebase.RTDB.getFloat(&fdbo, "/PSU/setVoltage", setVoltage);
-  Firebase.RTDB.getFloat(&fdbo, "/PSU/setCurrent", setCurrent);
-  Firebase.RTDB.setFloat(&fdbo, "/PSU/voltage", voltage);
-  Firebase.RTDB.setFloat(&fdbo, "/PSU/current", current);
+  String a, b;
+  a = Firebase.RTDB.getString(&fdbo, "/PSDK-UAS/setVolt") ? String(fdbo.to<const char *>()) : "0";
+  a = a.substring(2, a.length()-2);
+  setVoltage = a.toFloat();
+  b = Firebase.RTDB.getString(&fdbo, "/PSDK-UAS/setCurr") ? String(fdbo.to<const char *>()) : "0";
+  b = b.substring(2, b.length()-2);
+  setCurrent = b.toFloat();
+  Firebase.RTDB.setFloat(&fdbo, "/PSDK-UAS/voltage", voltage);
+  Firebase.RTDB.setFloat(&fdbo, "/PSDK-UAS/current", current);
 }
 
 void printLCD(){
