@@ -18,6 +18,7 @@ FirebaseConfig config;
 
 const float maxVolt = 35;
 const float maxCurrent = 6;
+int writeVal = 2500;
 float voltage, current, setVoltage=3, setCurrent=1;
 unsigned long prevMillis;
 
@@ -34,10 +35,21 @@ void setup(){
 }
 
 void loop(){
-  while (Firebase.ready()){
-    database();
+  current = ads.computeVolts(ads.readADC_SingleEnded(0));
+  voltage = ads.computeVolts(ads.readADC_SingleEnded(1));
+  if (current < setCurrent){
+    if (voltage < setVoltage){
+      writeVal--;
+    }
+    else if (voltage > setVoltage){
+      writeVal++;
+    }
+  }else if (current > setCurrent){
+    writeVal++;
   }
+  MCP.writeDAC(writeVal, false);
   if (millis() - prevMillis >= 200){
+    database();
     updateLCD();
     Serial.print("Set Voltage   : ");
     Serial.println(setVoltage);
