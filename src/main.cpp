@@ -21,6 +21,7 @@ const float maxCurrent = 6;
 int writeVal = 2500;
 float voltage, current, setVoltage=3, setCurrent=1;
 unsigned long prevMillis;
+String recVolt, recCurr;
 
 void setup(){
   WiFi.begin("12345", "tahutempe");
@@ -63,11 +64,10 @@ void loop(){
 }
 
 void database(){
-  Firebase.RTDB.getFloat(&fdbo, "/PSU/setVolt", setVoltage) ? String(fdbo.to<float>()) : fdbo.errorReason().c_str();
-  Firebase.RTDB.getFloat(&fdbo, "/PSU/SetCurrent", setCurrent) ? String(fdbo.to<float>()) : fdbo.errorReason().c_str();
+  Firebase.RTDB.getFloat(&fdbo, "/PSU/setVoltage", setVoltage);
+  Firebase.RTDB.getFloat(&fdbo, "/PSU/setCurrent", setCurrent);
   Firebase.RTDB.setFloat(&fdbo, "/PSU/voltage", voltage);
   Firebase.RTDB.setFloat(&fdbo, "/PSU/current", current);
-  
 }
 
 void printLCD(){
