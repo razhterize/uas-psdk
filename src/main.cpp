@@ -24,6 +24,7 @@ unsigned long prevMillis;
 String recVolt, recCurr;
 
 void setup(){
+  Serial.begin(115200);
   WiFi.begin("12345", "tahutempe");
   config.api_key = "AIzaSyAiuX8LjDc7eWa1g9MeCJDmDLJc_qKLGLw";
   config.database_url = "https://psdk-uas-87803-default-rtdb.asia-southeast1.firebasedatabase.app/";
