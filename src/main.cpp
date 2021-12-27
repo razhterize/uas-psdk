@@ -21,15 +21,14 @@ const float maxCurrent = 6;
 int writeVal = 2500;
 float voltage, current, setVoltage=3, setCurrent=1;
 unsigned long prevMillis;
-String recVolt, recCurr;
 
 void setup(){
   Serial.begin(115200);
-  WiFi.begin("12345", "tahutempe");
+  WiFi.begin("12345","tahutempe");
   config.api_key = "AIzaSyAiuX8LjDc7eWa1g9MeCJDmDLJc_qKLGLw";
   config.database_url = "https://psdk-uas-87803-default-rtdb.asia-southeast1.firebasedatabase.app/";
-  auth.user.email = 'razhterize@gmail.com';
-  auth.user.password = 'visualstudio';
+  auth.user.email = "razhterize@gmail.com";
+  auth.user.password = "visualstudio";
   MCP.begin();
   lcd.init();
   lcd.backlight();
@@ -51,7 +50,9 @@ void loop(){
   }
   MCP.writeDAC(writeVal, false);
   if (millis() - prevMillis >= 200){
-    database();
+    if (Firebase.ready()){
+      database();
+    }
     updateLCD();
     Serial.print("Set Voltage   : ");
     Serial.println(setVoltage);
