@@ -32,6 +32,7 @@ void setup(){
   }
   ads.setGain(GAIN_ONE);
   lcd.init();
+  lcd.backlight();
   WiFi.begin("12345","tahutempe");
   while(!WiFi.isConnected()){
     Serial.print(".");
